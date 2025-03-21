@@ -1,23 +1,27 @@
 import numpy as np
-import pandas as pd
 import streamlit as st
 import joblib
 import os
 
-# --- Load Model and Data ---
-@st.cache(allow_output_mutation=True)
+# --- Load Model ---
+@st.cache_resource
 def load_model():
     if not os.path.exists("rf_model.pkl"):
         st.error("Model file not found. Please run your training script first.")
         st.stop()
-    rf_model = joblib.load("rf_model.pkl")
-    return rf_model
+    return joblib.load("rf_model.pkl")
 
 rf_model = load_model()
 
-# --- Load CSV to get feature names ---
-df = pd.read_csv("inputdata.csv")
-feature_columns = df.drop(columns=["BOD (mg/L)"], errors='ignore').columns.tolist()
+# --- Load Feature Names ---
+@st.cache_resource
+def load_feature_names():
+    if not os.path.exists("feature_names.pkl"):
+        st.error("Feature names file not found. Ensure feature_names.pkl is available.")
+        st.stop()
+    return joblib.load("feature_names.pkl")
+
+feature_columns = load_feature_names()
 
 # --- WHO Guidelines for Water Quality ---
 limits = {
@@ -38,7 +42,7 @@ st.title("CCME WQI Calculator & BOD Predictor")
 
 st.sidebar.header("Enter Water Quality Parameters")
 
-# Sidebar inputs for each parameter dynamically from feature_columns
+# Sidebar inputs
 user_inputs = {}
 for param in feature_columns:
     if param == "Month":
@@ -53,11 +57,11 @@ if st.sidebar.button("Calculate WQI"):
     else:
         X_input = np.array([user_inputs[col] for col in feature_columns]).reshape(1, -1)
         predicted_bod = rf_model.predict(X_input)[0]
-        
+
         # Add predicted BOD to the inputs
         wqi_inputs = user_inputs.copy()
         wqi_inputs["BOD (mg/L)"] = predicted_bod
-        
+
         # Calculate CCME WQI components
         failed_params = 0
         failed_tests = 0
@@ -75,13 +79,13 @@ if st.sidebar.button("Calculate WQI"):
                         failed_params += 1
                         failed_tests += 1
                         deviations.append(((value / limit) - 1) * 100)
-        
+
         F1 = (failed_params / len(limits)) * 100
         F2 = (failed_tests / len(limits)) * 100
         NSE = np.sum(deviations) / len(limits) if deviations else 0
         F3 = NSE / (0.01 * NSE + 0.01)
         CCME_WQI = 100 - (np.sqrt(F1**2 + F2**2 + F3**2) / 1.732)
-        
+
         quality = (
             "Excellent" if CCME_WQI >= 95 else
             "Good" if CCME_WQI >= 80 else
@@ -89,7 +93,7 @@ if st.sidebar.button("Calculate WQI"):
             "Marginal" if CCME_WQI >= 45 else
             "Poor"
         )
-        
+
         st.success(f"Predicted BOD: {predicted_bod:.2f} mg/L")
         st.info(f"CCME WQI Score: {CCME_WQI:.2f}")
         st.write(f"Water Quality Category: {quality}")

@@ -5,21 +5,14 @@ import os
 
 st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 
-# Apply custom styling
+# Apply custom styles
 st.markdown(
     """
     <style>
-        .stApp {
-            background-color: #e3f2fd;
-        }
-        .sidebar .sidebar-content {
-            background-color: #e6e6fa !important;
-        }
-        .result-box {
-            background-color: #d1ecf1;
-            padding: 10px;
-            border-radius: 10px;
-        }
+        .stApp {background-color: #e3f2fd;}
+        .sidebar {background-color: #e1bee7; padding: 20px; border-radius: 10px;}
+        .css-1v0mbdj {background-color: #ffffff; border-radius: 10px; padding: 20px;}
+        .highlight-box {background-color: #90caf9; padding: 10px; border-radius: 10px; font-weight: bold;}
     </style>
     """,
     unsafe_allow_html=True
@@ -47,15 +40,21 @@ feature_columns = load_feature_names()
 
 # --- WHO & FAO Guidelines for Different Water Uses ---
 water_quality_limits = {
-    "Drinking": {"DO (mg/L)": (6.5, 8), "pH": (6.5, 8.5), "Conductivity (µS/cm)": 500, "BOD (mg/L)": 1,
-                  "Nitrate (mg/L)": 10, "Turbidity (NTU)": 1, "Chloride (mg/L)": 250, "COD (mg/L)": 3,
-                  "Ammonia (mg/L)": 0.5, "TDS (mg/L)": 500},
-    "Domestic": {"DO (mg/L)": (5, 8), "pH": (6.0, 9.0), "Conductivity (µS/cm)": 1500, "BOD (mg/L)": 5,
-                  "Nitrate (mg/L)": 50, "Turbidity (NTU)": 5, "Chloride (mg/L)": 600, "COD (mg/L)": 10,
-                  "Ammonia (mg/L)": 1, "TDS (mg/L)": 1000},
-    "Agriculture": {"DO (mg/L)": (4, 6), "pH": (6.0, 8.5), "Conductivity (µS/cm)": 3000, "BOD (mg/L)": 10,
-                     "Nitrate (mg/L)": 50, "Turbidity (NTU)": 10, "Chloride (mg/L)": 700, "COD (mg/L)": 20,
-                     "Ammonia (mg/L)": 5, "TDS (mg/L)": 2000}
+    "Drinking": {
+        "DO (mg/L)": (6.5, 8), "pH": (6.5, 8.5), "Conductivity (µS/cm)": 500,
+        "BOD (mg/L)": 1, "Nitrate (mg/L)": 10, "Turbidity (NTU)": 1,
+        "Chloride (mg/L)": 250, "COD (mg/L)": 3, "Ammonia (mg/L)": 0.5, "TDS (mg/L)": 500
+    },
+    "Domestic": {
+        "DO (mg/L)": (5, 8), "pH": (6.0, 9.0), "Conductivity (µS/cm)": 1500,
+        "BOD (mg/L)": 5, "Nitrate (mg/L)": 50, "Turbidity (NTU)": 5,
+        "Chloride (mg/L)": 600, "COD (mg/L)": 10, "Ammonia (mg/L)": 1, "TDS (mg/L)": 1000
+    },
+    "Agriculture": {
+        "DO (mg/L)": (4, 6), "pH": (6.0, 8.5), "Conductivity (µS/cm)": 3000,
+        "BOD (mg/L)": 10, "Nitrate (mg/L)": 50, "Turbidity (NTU)": 10,
+        "Chloride (mg/L)": 700, "COD (mg/L)": 20, "Ammonia (mg/L)": 5, "TDS (mg/L)": 2000
+    }
 }
 
 # --- Streamlit UI ---
@@ -75,18 +74,17 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
     else:
         X_input = np.array([user_inputs[col] for col in feature_columns]).reshape(1, -1)
         predicted_bod = rf_model.predict(X_input)[0]
+
+        # Add predicted BOD to the inputs
         user_inputs["BOD (mg/L)"] = predicted_bod
+
+        st.markdown(f"<div class='highlight-box'>Predicted BOD: {predicted_bod:.2f} mg/L</div>", unsafe_allow_html=True)
         
-        st.markdown(f"<div class='result-box'><h3>Predicted BOD: {predicted_bod:.2f} mg/L</h3></div>", unsafe_allow_html=True)
-        
-        selected_category = st.selectbox("Select Water Use Type for Quality Assessment:", list(water_quality_limits.keys()))
-        
-        if selected_category:
-            limits = water_quality_limits[selected_category]
+        for category, limits in water_quality_limits.items():
             failed_params = 0
             failed_tests = 0
             deviations = []
-            
+
             for param, value in user_inputs.items():
                 if param in limits:
                     limit = limits[param]
@@ -118,7 +116,7 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
                 "Poor"
             )
 
-            st.markdown(f"<div class='result-box'><h3>{selected_category} Water Quality</h3>", unsafe_allow_html=True)
-            st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
-            st.write(f"**Water Quality Category:** {quality}")
-            st.write("---")
+            with st.expander(f"{category} Water Quality", expanded=False):
+                st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
+                st.write(f"**Water Quality Category:** {quality}")
+                st.write("---")

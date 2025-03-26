@@ -43,7 +43,8 @@ water_quality_limits = {
 }
 
 # --- Streamlit UI ---
-st.title("CCME WQI Calculator & BOD Predictor")
+st.set_page_config(page_title="Water Quality Analysis", layout="wide")
+st.title("🌊 CCME WQI Calculator & BOD Predictor")
 
 st.sidebar.header("Enter Water Quality Parameters")
 
@@ -53,7 +54,7 @@ for param in feature_columns:
     user_inputs[param] = st.sidebar.number_input(f"{param}:", min_value=0.0, value=0.0, step=0.1)
 
 # Button to trigger prediction
-if st.sidebar.button("Calculate WQI"):
+if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
     if any(value < 0 for value in user_inputs.values()):
         st.error("All values must be non-negative.")
     else:
@@ -63,7 +64,9 @@ if st.sidebar.button("Calculate WQI"):
         # Add predicted BOD to the inputs
         user_inputs["BOD (mg/L)"] = predicted_bod
 
-        # Compute CCME WQI for each category
+        col1, col2 = st.columns(2)
+        col1.success(f"Predicted BOD: {predicted_bod:.2f} mg/L")
+
         for category, limits in water_quality_limits.items():
             failed_params = 0
             failed_tests = 0
@@ -100,12 +103,8 @@ if st.sidebar.button("Calculate WQI"):
                 "Poor"
             )
 
-            st.subheader(f"{category} Water Quality")
-            st.write(f"**CCME WQI Score:** {CCME_WQI:.2f}")
-            st.write(f"**Water Quality Category:** {quality}")
-            st.write(f"**Scope (F1):** {F1:.2f}%")
-            st.write(f"**Frequency (F2):** {F2:.2f}%")
-            st.write(f"**Amplitude (F3):** {F3:.2f}")
-            st.write("---")
-
-        st.success(f"Predicted BOD: {predicted_bod:.2f} mg/L")
+            with col2:
+                st.markdown(f"### {category} Water Quality")
+                st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
+                st.write(f"**Water Quality Category:** {quality}")
+                st.write("---")

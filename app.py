@@ -1,3 +1,4 @@
+st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 import numpy as np
 import streamlit as st
 import joblib

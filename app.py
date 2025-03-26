@@ -119,4 +119,3 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
             with st.expander(f"{category} Water Quality", expanded=False):
                 st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
                 st.write(f"**Water Quality Category:** {quality}")
-                st.write("---")

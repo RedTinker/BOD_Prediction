@@ -3,23 +3,19 @@ import streamlit as st
 import joblib
 import os
 
+# Set page title and layout
 st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 
-# Apply custom background color
+# --- Custom Styling ---
 st.markdown(
     """
     <style>
-        body {
-            background-color: #e3f2fd;
-        }
-        .stApp {
-            background-color: #e3f2fd;
-        }
-        .css-18e3th9 {
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 20px;
-        }
+        .stApp {background-color: #f4f7fc;}
+        .stSidebar {background-color: #ffffff; padding: 20px;}
+        .main-title {color: #003366; text-align: center; font-size: 2.2em;}
+        .stButton>button {width: 100%; background-color: #0066cc; color: white; border-radius: 10px;}
+        .metric-box {border-radius: 10px; background-color: #ffffff; padding: 15px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);}
+        .info-box {border-radius: 10px; background-color: #e3f2fd; padding: 15px;}
     </style>
     """,
     unsafe_allow_html=True
@@ -45,27 +41,15 @@ def load_feature_names():
 
 feature_columns = load_feature_names()
 
-# --- WHO & FAO Guidelines for Different Water Uses ---
+# --- Water Quality Limits ---
 water_quality_limits = {
-    "Drinking": {
-        "DO (mg/L)": (6.5, 8), "pH": (6.5, 8.5), "Conductivity (µS/cm)": 500,
-        "BOD (mg/L)": 1, "Nitrate (mg/L)": 10, "Turbidity (NTU)": 1,
-        "Chloride (mg/L)": 250, "COD (mg/L)": 3, "Ammonia (mg/L)": 0.5, "TDS (mg/L)": 500
-    },
-    "Domestic": {
-        "DO (mg/L)": (5, 8), "pH": (6.0, 9.0), "Conductivity (µS/cm)": 1500,
-        "BOD (mg/L)": 5, "Nitrate (mg/L)": 50, "Turbidity (NTU)": 5,
-        "Chloride (mg/L)": 600, "COD (mg/L)": 10, "Ammonia (mg/L)": 1, "TDS (mg/L)": 1000
-    },
-    "Agriculture": {
-        "DO (mg/L)": (4, 6), "pH": (6.0, 8.5), "Conductivity (µS/cm)": 3000,
-        "BOD (mg/L)": 10, "Nitrate (mg/L)": 50, "Turbidity (NTU)": 10,
-        "Chloride (mg/L)": 700, "COD (mg/L)": 20, "Ammonia (mg/L)": 5, "TDS (mg/L)": 2000
-    }
+    "Drinking": {"DO (mg/L)": (6.5, 8), "pH": (6.5, 8.5), "Conductivity (µS/cm)": 500, "BOD (mg/L)": 1},
+    "Domestic": {"DO (mg/L)": (5, 8), "pH": (6.0, 9.0), "Conductivity (µS/cm)": 1500, "BOD (mg/L)": 5},
+    "Agriculture": {"DO (mg/L)": (4, 6), "pH": (6.0, 8.5), "Conductivity (µS/cm)": 3000, "BOD (mg/L)": 10}
 }
 
 # --- Streamlit UI ---
-st.title("🌊 CCME WQI Calculator & BOD Predictor")
+st.markdown("<h1 class='main-title'>🌊 Water Quality & BOD Prediction</h1>", unsafe_allow_html=True)
 
 st.sidebar.header("Enter Water Quality Parameters")
 
@@ -74,19 +58,19 @@ user_inputs = {}
 for param in feature_columns:
     user_inputs[param] = st.sidebar.number_input(f"{param}:", min_value=0.0, value=0.0, step=0.1)
 
-# Button to trigger prediction
 if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
     if any(value < 0 for value in user_inputs.values()):
         st.error("All values must be non-negative.")
     else:
         X_input = np.array([user_inputs[col] for col in feature_columns]).reshape(1, -1)
         predicted_bod = rf_model.predict(X_input)[0]
-
-        # Add predicted BOD to the inputs
         user_inputs["BOD (mg/L)"] = predicted_bod
 
         col1, col2 = st.columns(2)
-        col1.success(f"Predicted BOD: {predicted_bod:.2f} mg/L")
+        with col1:
+            st.markdown("<div class='metric-box'><h3>Predicted BOD</h3>", unsafe_allow_html=True)
+            st.success(f"{predicted_bod:.2f} mg/L")
+            st.markdown("</div>", unsafe_allow_html=True)
 
         for category, limits in water_quality_limits.items():
             failed_params = 0
@@ -125,7 +109,7 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
             )
 
             with col2:
-                st.markdown(f"### {category} Water Quality")
+                st.markdown(f"<div class='info-box'><h3>{category} Water Quality</h3>", unsafe_allow_html=True)
                 st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
                 st.write(f"**Water Quality Category:** {quality}")
-                st.write("---")
+                st.markdown("</div>", unsafe_allow_html=True)

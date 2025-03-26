@@ -5,6 +5,26 @@ import os
 
 st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 
+# Apply custom background color
+st.markdown(
+    """
+    <style>
+        body {
+            background-color: #e3f2fd;
+        }
+        .stApp {
+            background-color: #e3f2fd;
+        }
+        .css-18e3th9 {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # --- Load Model ---
 @st.cache_resource
 def load_model():

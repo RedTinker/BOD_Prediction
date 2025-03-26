@@ -13,6 +13,7 @@ st.markdown(
         .sidebar {background-color: #e1bee7; padding: 20px; border-radius: 10px;}
         .css-1v0mbdj {background-color: #ffffff; border-radius: 10px; padding: 20px;}
         .highlight-box {background-color: #90caf9; padding: 10px; border-radius: 10px; font-weight: bold;}
+        .water-quality-title {font-size: 22px; font-weight: bold;}
     </style>
     """,
     unsafe_allow_html=True

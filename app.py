@@ -5,20 +5,29 @@ import os
 
 st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 
-# Apply custom background color
+# Apply custom background color and styling
 st.markdown(
     """
     <style>
         body {
-            background-color: #e3f2fd;
+            background: linear-gradient(to right, #a8e6cf, #dcedc1);
         }
         .stApp {
-            background-color: #e3f2fd;
+            background-color: #f7fff7;
+            padding: 20px;
+            border-radius: 15px;
         }
-        .css-18e3th9 {
+        .input-container {
             background-color: #ffffff;
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .result-box {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
         }
     </style>
     """,
@@ -65,14 +74,16 @@ water_quality_limits = {
 }
 
 # --- Streamlit UI ---
-st.title("🌊 CCME WQI Calculator & BOD Predictor")
+st.title("CCME WQI Calculator & BOD Predictor")
 
 st.sidebar.header("Enter Water Quality Parameters")
 
 # Sidebar inputs
 user_inputs = {}
+st.sidebar.markdown('<div class="input-container">', unsafe_allow_html=True)
 for param in feature_columns:
     user_inputs[param] = st.sidebar.number_input(f"{param}:", min_value=0.0, value=0.0, step=0.1)
+st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
 # Button to trigger prediction
 if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
@@ -117,15 +128,17 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
             CCME_WQI = 100 - (np.sqrt(F1**2 + F2**2 + F3**2) / 1.732)
 
             quality = (
-                "Excellent" if CCME_WQI >= 95 else
-                "Good" if CCME_WQI >= 80 else
-                "Fair" if CCME_WQI >= 65 else
-                "Marginal" if CCME_WQI >= 45 else
-                "Poor"
+                "<span style='color: green;'>Excellent</span>" if CCME_WQI >= 95 else
+                "<span style='color: blue;'>Good</span>" if CCME_WQI >= 80 else
+                "<span style='color: orange;'>Fair</span>" if CCME_WQI >= 65 else
+                "<span style='color: red;'>Marginal</span>" if CCME_WQI >= 45 else
+                "<span style='color: darkred;'>Poor</span>"
             )
 
             with col2:
                 st.markdown(f"### {category} Water Quality")
+                st.markdown(f'<div class="result-box">', unsafe_allow_html=True)
                 st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
-                st.write(f"**Water Quality Category:** {quality}")
+                st.markdown(f"**Water Quality Category:** {quality}", unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
                 st.write("---")

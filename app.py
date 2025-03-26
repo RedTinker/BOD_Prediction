@@ -1,9 +1,9 @@
 import numpy as np
 import streamlit as st
-st.set_page_config(page_title="Water Quality Analysis", layout="wide")
-
 import joblib
 import os
+
+st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 
 # --- Load Model ---
 @st.cache_resource
@@ -45,7 +45,6 @@ water_quality_limits = {
 }
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 st.title("🌊 CCME WQI Calculator & BOD Predictor")
 
 st.sidebar.header("Enter Water Quality Parameters")

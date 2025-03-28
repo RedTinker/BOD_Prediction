@@ -87,10 +87,15 @@ def calculate_ccme_wqi(inputs, limits):
 st.title("🌊 CCME WQI Calculator & BOD Predictor")
 
 st.sidebar.header("Enter Water Quality Parameters")
-user_inputs = {param: st.sidebar.number_input(f"{param}:", min_value=0.0, value=0.0, step=0.1) for param in feature_columns}
+user_inputs = {}
+for param in feature_columns:
+    if param == "Month":
+        user_inputs[param] = st.sidebar.number_input(f"{param}:", min_value=1, max_value=12, value=1, step=1)
+    else:
+        user_inputs[param] = st.sidebar.number_input(f"{param}:", min_value=0.0, value=0.0, step=0.1)
 
 if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
-    if any(value < 0 for value in user_inputs.values()):
+    if any(value < 0 for key, value in user_inputs.items() if key != "Month"):
         st.error("All values must be non-negative.")
     else:
         X_input = np.array([user_inputs[col] for col in feature_columns]).reshape(1, -1)

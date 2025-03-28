@@ -88,9 +88,13 @@ st.title("🌊 CCME WQI Calculator & BOD Predictor")
 
 st.sidebar.header("Enter Water Quality Parameters")
 user_inputs = {}
+month_names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
 for param in feature_columns:
     if param == "Month":
-        user_inputs[param] = st.sidebar.number_input(f"{param}:", min_value=1, max_value=12, value=1, step=1)
+        month_index = st.sidebar.slider(f"{param}:", min_value=1, max_value=12, value=1, step=1, format="%d")
+        user_inputs[param] = month_index
+        st.sidebar.write(f"Selected Month: {month_names[month_index - 1]}")
     else:
         user_inputs[param] = st.sidebar.number_input(f"{param}:", min_value=0.0, value=0.0, step=0.1)
 

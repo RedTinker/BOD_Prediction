@@ -98,8 +98,10 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
 
         st.markdown(f"<div style='background-color:#90caf9;padding:10px;border-radius:10px;font-weight:bold;'>Predicted BOD: {predicted_bod:.2f} mg/L</div>", unsafe_allow_html=True)
         
+        filtered_inputs = {key: value for key, value in user_inputs.items() if key != "Month"}
+        
         for category, limits in water_quality_limits.items():
-            CCME_WQI, quality = calculate_ccme_wqi(user_inputs, limits)
+            CCME_WQI, quality = calculate_ccme_wqi(filtered_inputs, limits)
             with st.expander(f"{category} Water Quality", expanded=False):
                 st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
                 st.write(f"**Water Quality Category:** {quality}")

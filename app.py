@@ -6,15 +6,27 @@ import pandas as pd
 
 st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 
+# Load the pickled Random Forest model
 @st.cache_resource
-def load_model():
+def load_rf_model():
     if not os.path.exists("rf_model.pkl"):
-        st.error("Model file not found. Please run your training script first.")
+        st.error("Random Forest model file not found. Please run your training script first.")
         st.stop()
     return joblib.load("rf_model.pkl")
 
-rf_model = load_model()
+rf_model = load_rf_model()
 
+# Load the pickled RFSVR model
+@st.cache_resource
+def load_rfsvr_model():
+    if not os.path.exists("rfsvr_model.pkl"):
+        st.error("RFSVR model file not found. Please run your training script first.")
+        st.stop()
+    return joblib.load("rfsvr_model.pkl")
+
+rfsvr_model = load_rfsvr_model()
+
+# Load feature names for input
 @st.cache_resource
 def load_feature_names():
     if not os.path.exists("feature_names.pkl"):
@@ -102,8 +114,12 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
     if any(value < 0 for key, value in user_inputs.items() if key != "Month"):
         st.error("All values must be non-negative.")
     else:
-        X_input = np.array([user_inputs[col] for col in feature_columns]).reshape(1, -1)
-        predicted_bod = rf_model.predict(X_input)[0]
+        # First use the Random Forest model to get the 1D feature input for RFSVR
+        X_input_rf = np.array([user_inputs[col] for col in feature_columns]).reshape(1, -1)
+        rf_predictions = rf_model.predict(X_input_rf).reshape(-1, 1)  # Get 1D feature from RF model
+
+        # Now, use the RFSVR model to predict the BOD value
+        predicted_bod = rfsvr_model.predict(rf_predictions)[0]
         user_inputs["BOD (mg/L)"] = predicted_bod
 
         st.markdown(f"<div style='background-color:#90caf9;padding:10px;border-radius:10px;font-weight:bold;'>Predicted BOD: {predicted_bod:.2f} mg/L</div>", unsafe_allow_html=True)

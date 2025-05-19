@@ -3,6 +3,9 @@ import streamlit as st
 import joblib
 import os
 import pandas as pd
+import firebase_admin
+from firebase_admin import credentials, firestore
+from datetime import datetime
 
 st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 
@@ -109,9 +112,16 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
         st.markdown(f"<div style='background-color:#90caf9;padding:10px;border-radius:10px;font-weight:bold;'>Predicted BOD: {predicted_bod:.2f} mg/L</div>", unsafe_allow_html=True)
         
         filtered_inputs = {key: value for key, value in user_inputs.items() if key != "Month"}
+        results = {}
         
         for category, limits in water_quality_limits.items():
             CCME_WQI, quality = calculate_ccme_wqi(filtered_inputs, limits)
             with st.expander(f"{category} Water Quality", expanded=False):
                 st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
                 st.write(f"**Water Quality Category:** {quality}")
+        db.collection("predictions").add({
+            "inputs": user_inputs,
+            "predicted_bod": predicted_bod,
+            "wqi_results": results,
+            "timestamp": datetime.utcnow()
+        })

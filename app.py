@@ -6,8 +6,20 @@ import pandas as pd
 import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
+import json
 
 st.set_page_config(page_title="Water Quality Analysis", layout="wide")
+
+# Firebase init
+@st.cache_resource
+def init_firebase():
+    key_dict = json.loads(st.secrets["firebase_key"])
+    cred = credentials.Certificate(key_dict)
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred)
+    return firestore.client()
+
+db = init_firebase()
 
 @st.cache_resource
 def load_model():
@@ -109,16 +121,22 @@ if st.sidebar.button("🔍 Calculate WQI & Predict BOD"):
         predicted_bod = rf_model.predict(X_input)[0]
         user_inputs["BOD (mg/L)"] = predicted_bod
 
-        st.markdown(f"<div style='background-color:#90caf9;padding:10px;border-radius:10px;font-weight:bold;'>Predicted BOD: {predicted_bod:.2f} mg/L</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='background-color:#90caf9;padding:10px;border-radius:10px;font-weight:bold;'>"
+            f"Predicted BOD: {predicted_bod:.2f} mg/L</div>",
+            unsafe_allow_html=True
+        )
         
         filtered_inputs = {key: value for key, value in user_inputs.items() if key != "Month"}
         results = {}
         
         for category, limits in water_quality_limits.items():
             CCME_WQI, quality = calculate_ccme_wqi(filtered_inputs, limits)
+            results[category] = {"CCME_WQI": CCME_WQI, "Category": quality}
             with st.expander(f"{category} Water Quality", expanded=False):
                 st.info(f"**CCME WQI Score:** {CCME_WQI:.2f}")
                 st.write(f"**Water Quality Category:** {quality}")
+
         db.collection("predictions").add({
             "inputs": user_inputs,
             "predicted_bod": predicted_bod,

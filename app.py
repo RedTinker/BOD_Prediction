@@ -13,7 +13,7 @@ st.set_page_config(page_title="Water Quality Analysis", layout="wide")
 # Firebase init
 @st.cache_resource
 def init_firebase():
-    key_dict = json.loads(st.secrets["firebase_key"])
+    key_dict = dict(st.secrets["firebase_key"])
     cred = credentials.Certificate(key_dict)
     if not firebase_admin._apps:
         firebase_admin.initialize_app(cred)
